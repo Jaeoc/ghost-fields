@@ -1,61 +1,148 @@
-breed [researchers researcher]
-researchers-own [sig-love result]
+extensions [ rnd ] ;for weighted random value
 
-globals [
- prop-sig
-]
+breed [researchers researcher]
+breed [topics topic]
+
+researchers-own [hypothesis result memory continue]
+topics-own [evidence ID]
+
+
+
+;globals [ ;currently not used
+; prop-sig
+; ]
 
 to setup
   clear-all
 
   create-researchers num-researchers
   ask researchers [
-    set sig-love random-float 1
+    set hypothesis one-of range num-hyps
+    set memory n-values length-memory [0] ;start with zero negatives
+    set continue 1 ;by default continue on the same topic
   ]
+
+  create-topics num-hyps
+  let iterator -1 ;see below. Based on answer in: from https://stackoverflow.com/questions/47696190/netlogo-how-to-assign-a-value-to-a-variable-from-an-existing-string-list
+  ask topics [
+    set iterator iterator + 1
+    set ID item iterator (range num-hyps)
+
+    set evidence n-values 3 [0] ;1st is positive, 2nd negative, 3rd proportion
+    ;hmm, I suspect my foreach version would also work without the one-of topics
+  ]
+
   reset-ticks
 end
 
 to go
 
   ask researchers [
-   set result random 2 ;random integer between 0 and N-1, i.e., 0 or 1
+    ifelse random-float 1 < 0.05 ;assumes a null true effect, and only false positives
+    [ set result 1 ]
+    [ set result 0 ]
+
+    ;set first memory value to result, push the remainder forward and drop last
+    set memory sentence result memory ;cbind
+    set memory remove-item 5 memory ;drop the last item, netlogo counts from 0
+
+    ;study same topic? Probabilities based on memory with yes/no in the end
+    let num-non-sig 5 - sum memory
+
+    if num-non-sig = 0 [set continue 1]
+    if num-non-sig = 1 [ifelse random-float 1 > 0.95
+      [set continue 1]
+      [set continue 0]
+    ]
+    if num-non-sig = 2 [ifelse random-float 1 > 0.8
+      [set continue 1]
+      [set continue 0]
+    ]
+    if num-non-sig = 3 [ifelse random-float 1 > 0.5
+      [set continue 1]
+      [set continue 0]
+    ]
+    if num-non-sig = 4 [ifelse random-float 1 > 0.2
+      [set continue 1]
+      [set continue 0]
+    ]
+    if num-non-sig = 5 [set continue 0]
+
   ]
 
-  if file-drawer? [
-   ask researchers [
-     ifelse (result = 0) and (sig-love > 0.5) ; if non-sig and ..
-      [set result one-of [0 2]] ; file drawer 50/50, we don't count results with the value 2
-      [set result result]
+  ; next, update evidence on topics that can be used to select topic
+  foreach range num-hyps [hyp -> ;for each topic/hypothesis
+    let n_sig found-sig hyp ;count number of significant
+    let adherents count researchers with [hypothesis = hyp] ;count how many people studying the topic this round
+    let non_sig adherents - n_sig ;compute non-sig
+
+    ask topics with [ID = hyp] [ ;update evidence
+      set evidence replace-item 0 evidence (item 0 evidence + n_sig) ;old sig + new sig studies total
+      set evidence replace-item 1 evidence (item 1 evidence + non_sig) ;old non-sig + new non-sig studies total
+      set evidence replace-item 2 evidence (n_sig / adherents) ;proportion significant studies for each topic
     ]
   ]
 
-  if p-hacking? [
-    ask researchers [
-     ifelse (result = 0) and (sig-love > 0.3)
-      [ifelse random-float 1 < 0.3
-        [set result 1]
-        [set result one-of [0 2]] ;file drawer 50/50
-      ]
-      [set result result]
-      ]
-    ]
+  ask researchers with [continue = 0] [;ask researchers who want a new topic to pick based on evidence
 
-  let sig count researchers with [result = 1]
-  let non-sig count researchers with [result = 0]
-  let total sig + non-sig
-  set prop-sig (sig / total)
+    ;remove the hypothesis they just studied
+    let new_topics topics with [ID != [hypothesis] of researchers]
+
+    ; compute total sum of proportions across topics
+    let topic_proportions map [x -> item 2 x] ([evidence] of new_topics)
+    ; https://stackoverflow.com/questions/72320334/how-to-use-a-command-all-the-4th-item-nested-lists-in-netlogo
+    let total sum topic_proportions
+
+    if(total > 0) [ ; add because first round all topics are at zero and then we divide by zero below
+    ; compute normalized probability for each topic
+    let normalized_probabilities map [i -> i / total] topic_proportions
+
+    ; researchers set new topic with prob equal to above
+    set hypothesis pick_new_topic normalized_probabilities
+    ]
+  ]
+
 
   tick
 end
+
+to-report found-sig [hyp]
+
+   report sum [result] of researchers with [hypothesis = hyp] ;count first list item of..
+  ; To check if working, change one researchers result to 1 and run > [result] of researchers with [hypothesis = 1]
+end
+
+to-report pick_new_topic [normalized_probs]
+  ;https://stackoverflow.com/questions/41901313/netlogo-assign-variable-using-probabilities
+  let options_prob (map list (range num-hyps) normalized_probs)
+  report first rnd:weighted-one-of-list options_prob last ;outputs the new hyp value
+end
+
+
+;to assign-topic-id ;from https://stackoverflow.com/questions/47696190/netlogo-how-to-assign-a-value-to-a-variable-from-an-existing-string-list
+;  let iterator -1
+;  ask topics ;NB. ask goes in random order. Iteration will only go to number of topics so won't overshoot
+;  [ set iterator iterator + 1
+;    set ID item iterator (range num-hyps)
+;  ]
+;end ;use when setting up ID for topics
+
+; this below is old
+;  let sig count researchers with [result = 1]
+;  let non-sig count researchers with [result = 0]
+;  let total sig + non-sig
+;  set prop-sig (sig / total)
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
-373
-173
-647
-448
+385
+315
+558
+489
 -1
 -1
-8.061
+5.0
 1
 10
 1
@@ -99,7 +186,7 @@ BUTTON
 54
 NIL
 go
-T
+NIL
 1
 T
 OBSERVER
@@ -118,62 +205,96 @@ num-researchers
 num-researchers
 0
 100
-50.0
+100.0
 1
 1
 NIL
 HORIZONTAL
 
-SWITCH
-210
-25
-327
-58
-file-drawer?
-file-drawer?
-0
+SLIDER
+205
+85
+377
+118
+num-hyps
+num-hyps
 1
--1000
+100
+7.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+205
+130
+377
+163
+length-memory
+length-memory
+0
+10
+5.0
+1
+1
+NIL
+HORIZONTAL
 
 PLOT
-55
-160
-255
-310
-Prop sig
+380
+30
+670
+305
+Prop. sig
+NIL
+NIL
+0.0
+1.0
+0.0
+0.5
+true
+true
+"" ""
+PENS
+"pen-0" 1.0 0 -7500403 true "" "ask topics [\n\n create-temporary-plot-pen (word who)\n set-plot-pen-color ID * 10 + 5\n plotxy ticks (item 2 evidence)\n]"
+"pen-1" 1.0 0 -16777216 true "" "plotxy ticks 0.05"
+
+PLOT
+25
+190
+370
+430
+Researcher per topic
 NIL
 NIL
 0.0
 10.0
 0.0
-1.0
+10.0
 true
-false
+true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot prop-sig"
+"pen-0" 1.0 0 -1 true "" "ask topics [\nlet hyp ID\n let res count (researchers with [hypothesis = hyp])\n  create-temporary-plot-pen (word who)\n  set-plot-pen-color hyp * 10 + 5\n  plotxy ticks res\n\n\n]\n\n"
+"pen-1" 1.0 0 -16777216 true "" "plotxy ticks (num-researchers / num-hyps)"
 
-SWITCH
-210
-75
-322
-108
-p-hacking?
-p-hacking?
-0
-1
--1000
-
-MONITOR
-195
-355
-252
-400
+BUTTON
+200
+20
+263
+53
 NIL
-prop-sig
-2
+go
+T
 1
-11
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
