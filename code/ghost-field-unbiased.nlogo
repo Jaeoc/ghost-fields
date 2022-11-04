@@ -3,8 +3,11 @@ extensions [ rnd ] ;for weighted random value
 breed [researchers researcher]
 breed [topics topic]
 
-researchers-own [hypothesis result memory continue]
-topics-own [evidence ID]
+researchers-own [hypothesis
+  result
+  memory ;nb! Positive result = 1, negative = 0. Start studying a topic with zero negative results (i.e., all 1s)
+  continue]
+topics-own [ID evidence ES]
 
 
 
@@ -18,18 +21,25 @@ to setup
   create-researchers num-researchers
   ask researchers [
     set hypothesis one-of range num-hyps
-    set memory n-values length-memory [0] ;start with zero negatives
+    set memory n-values length-memory [1] ;start with zero negatives.
     set continue 1 ;by default continue on the same topic
   ]
 
   create-topics num-hyps
+  if (non-null-effects > num-hyps) [stop] ;cannot be more true effects than effects
+
+
+  let non-null n-values non-null-effects [power] ;list of non-null effects with power = power
+  let ES-list sentence (n-values (num-hyps - non-null-effects) [0.05]) non-null ;combine with null effects
+
   let iterator -1 ;see below. Based on answer in: from https://stackoverflow.com/questions/47696190/netlogo-how-to-assign-a-value-to-a-variable-from-an-existing-string-list
   ask topics [
     set iterator iterator + 1
-    set ID item iterator (range num-hyps)
+    set ID item iterator (range num-hyps) ;the iterator makes it so that each item in the list is only assigned once
+    set ES item iterator ES-list
 
     set evidence n-values 3 [0] ;1st is positive, 2nd negative, 3rd proportion
-    ;hmm, I suspect my foreach version would also work without the one-of topics
+
   ]
 
   reset-ticks
@@ -37,10 +47,16 @@ end
 
 to go
 
+  if any-abandoned? [stop] ;stop if some topic has zero researchers, only happens when power >= .95
+
   ask researchers [
-    ifelse random-float 1 < 0.05 ;assumes a null true effect, and only false positives
-    [ set result 1 ]
-    [ set result 0 ]
+    let draw random-float 1 ;each researcher draws a random value from 0 - 1
+    let study-topic hypothesis
+    let study-power item 0 ([ES] of topics with [ID = study-topic]); for some reason is a list despite single value, so must take item to be able to compare in next step
+
+    ifelse random-float 1 < study-power ;If power = 80%, this gives 80% chance of sig
+    [ set result 1 ] ;not negative
+    [ set result 0 ] ;negative
 
     ;set first memory value to result, push the remainder forward and drop last
     set memory sentence result memory ;cbind
@@ -72,14 +88,14 @@ to go
 
   ; next, update evidence on topics that can be used to select topic
   foreach range num-hyps [hyp -> ;for each topic/hypothesis
-    let n_sig found-sig hyp ;count number of significant
+    let n_sig found-sig hyp ;count number of significant this round
     let adherents count researchers with [hypothesis = hyp] ;count how many people studying the topic this round
     let non_sig adherents - n_sig ;compute non-sig
 
     ask topics with [ID = hyp] [ ;update evidence
       set evidence replace-item 0 evidence (item 0 evidence + n_sig) ;old sig + new sig studies total
       set evidence replace-item 1 evidence (item 1 evidence + non_sig) ;old non-sig + new non-sig studies total
-      set evidence replace-item 2 evidence (n_sig / adherents) ;proportion significant studies for each topic
+      set evidence replace-item 2 evidence (item 0 evidence / (item 0 evidence + item 1 evidence)) ;proportion significant studies for each topic
     ]
   ]
 
@@ -94,11 +110,14 @@ to go
     let total sum topic_proportions
 
     if(total > 0) [ ; add because first round all topics are at zero and then we divide by zero below
-    ; compute normalized probability for each topic
-    let normalized_probabilities map [i -> i / total] topic_proportions
+                    ; compute normalized probability for each topic
+      let normalized_probabilities map [i -> i / total] topic_proportions
 
-    ; researchers set new topic with prob equal to above
-    set hypothesis pick_new_topic normalized_probabilities
+      ; researchers set new topic with prob equal to above
+      set hypothesis pick_new_topic normalized_probabilities
+
+      ;must also reset the memory to zero negative results
+      set memory n-values 5 [1]
     ]
   ]
 
@@ -118,6 +137,13 @@ to-report pick_new_topic [normalized_probs]
   report first rnd:weighted-one-of-list options_prob last ;outputs the new hyp value
 end
 
+to-report any-abandoned?
+  let num-adherents n-values num-hyps [1] ;random value
+  foreach range num-hyps [hyp ->
+    set num-adherents replace-item hyp num-adherents (count researchers with [hypothesis = hyp])
+  ]
+  report min num-adherents = 0
+end
 
 ;to assign-topic-id ;from https://stackoverflow.com/questions/47696190/netlogo-how-to-assign-a-value-to-a-variable-from-an-existing-string-list
 ;  let iterator -1
@@ -133,13 +159,12 @@ end
 ;  let total sig + non-sig
 ;  set prop-sig (sig / total)
 
-
 @#$#@#$#@
 GRAPHICS-WINDOW
-385
-315
-558
-489
+430
+15
+603
+189
 -1
 -1
 5.0
@@ -220,7 +245,7 @@ num-hyps
 num-hyps
 1
 100
-7.0
+3.0
 1
 1
 NIL
@@ -242,10 +267,10 @@ NIL
 HORIZONTAL
 
 PLOT
-380
-30
-670
-305
+370
+360
+635
+600
 Prop. sig
 NIL
 NIL
@@ -259,12 +284,13 @@ true
 PENS
 "pen-0" 1.0 0 -7500403 true "" "ask topics [\n\n create-temporary-plot-pen (word who)\n set-plot-pen-color ID * 10 + 5\n plotxy ticks (item 2 evidence)\n]"
 "pen-1" 1.0 0 -16777216 true "" "plotxy ticks 0.05"
+"pen-2" 1.0 0 -16777216 true "" "plotxy ticks power"
 
 PLOT
-25
-190
-370
-430
+15
+360
+360
+600
 Researcher per topic
 NIL
 NIL
@@ -295,6 +321,36 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+25
+130
+197
+163
+non-null-effects
+non-null-effects
+0
+100
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+25
+180
+197
+213
+power
+power
+0
+1
+0.9
+0.05
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
