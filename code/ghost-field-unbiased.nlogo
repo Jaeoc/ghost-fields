@@ -145,6 +145,7 @@ to-report any-abandoned?
   report min num-adherents = 0
 end
 
+
 ;to assign-topic-id ;from https://stackoverflow.com/questions/47696190/netlogo-how-to-assign-a-value-to-a-variable-from-an-existing-string-list
 ;  let iterator -1
 ;  ask topics ;NB. ask goes in random order. Iteration will only go to number of topics so won't overshoot
@@ -158,7 +159,6 @@ end
 ;  let non-sig count researchers with [result = 0]
 ;  let total sig + non-sig
 ;  set prop-sig (sig / total)
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 430
@@ -331,7 +331,7 @@ non-null-effects
 non-null-effects
 0
 100
-1.0
+2.0
 1
 1
 NIL
@@ -346,7 +346,7 @@ power
 power
 0
 1
-0.9
+1.0
 0.05
 1
 NIL
@@ -698,6 +698,78 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="one-non-null" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>count researchers with [hypothesis = 0]</metric>
+    <metric>count researchers with [hypothesis = 1]</metric>
+    <metric>count researchers with [hypothesis = 2]</metric>
+    <enumeratedValueSet variable="power">
+      <value value="0"/>
+      <value value="0.05"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.3"/>
+      <value value="0.4"/>
+      <value value="0.5"/>
+      <value value="0.6"/>
+      <value value="0.7"/>
+      <value value="0.8"/>
+      <value value="0.9"/>
+      <value value="0.95"/>
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-researchers">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-hyps">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-memory">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="non-null-effects">
+      <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="multiple-non-null" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>count researchers with [hypothesis = 0]</metric>
+    <metric>count researchers with [hypothesis = 1]</metric>
+    <metric>count researchers with [hypothesis = 2]</metric>
+    <enumeratedValueSet variable="power">
+      <value value="0"/>
+      <value value="0.05"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.3"/>
+      <value value="0.4"/>
+      <value value="0.5"/>
+      <value value="0.6"/>
+      <value value="0.7"/>
+      <value value="0.8"/>
+      <value value="0.9"/>
+      <value value="0.95"/>
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-researchers">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-hyps">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-memory">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="non-null-effects">
+      <value value="2"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
