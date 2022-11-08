@@ -44,20 +44,33 @@ dat_split2 <- lapply(dat_split, improve_names)
 #recombine
 dat2 <- data.table::rbindlist(dat_split2)
 
-rep_means <- dat2[,.(mean_hyp = mean(hyp1)),
-                  by = .(power,X_step_)]
+rep_means <- dat2[,.(Null = mean(hyp0),
+                    Non_null = mean(hyp1)),
+                  by = .(power, X_step_)]
+
+
+#make wide to long
+rep_means_long <- data.table::melt(rep_means,
+        id = c("power", "X_step_"),
+        measure.vars = c("Null",
+                        "Non_null"),
+        variable.name = "Effect_size")
+
 
 library(ggplot2)
 
 ggplot(dat2) +
+geom_line(aes(x = X_step_, y = hyp0, #raw curves, hyp0!
+             group = X_run_number_),
+          alpha = 0.01) +
 geom_line(aes(x = X_step_, y = hyp1, #raw curves, hyp1!
              group = X_run_number_),
           alpha = 0.01) +
           ylab("Researcher studying non-null") +
           xlab("Study round") +
           ylim(c(0, 100)) +
-geom_line(data = rep_means, #means
-        aes(x = X_step_, y = mean_hyp)) + #hyp1
+geom_line(data = rep_means_long, #means
+        aes(x = X_step_, y = value, color = Effect_size)) + #hyp1
         facet_wrap(~power) +
         theme_bw() +
         ggtitle("One of two effects is non-null with a power of..")
@@ -81,6 +94,7 @@ dat_split <- split(dat, dat$power)
 improve_names <- function(x){
     x <- setDT(x)
     names(x) <- gsub("\\.", "_", names(x)) #get rid of strange .names
+    #EDIT: check indices below when updating dataset!
     names(x)[9:11] <- c("hyp0", "hyp1", "hyp2") #for multiple hyps
     x
 }
@@ -92,22 +106,37 @@ dat_split2 <- lapply(dat_split, improve_names)
 #recombine
 dat2 <- data.table::rbindlist(dat_split2)
 
-rep_means <- dat2[,.(mean_hyp = mean(hyp2)),
-                  by = .(power,X_step_)]
+rep_means <- dat2[,.(Null_1 = mean(hyp0),
+                    Null_2 = mean(hyp1),
+                    Non_null = mean(hyp2)),
+                  by = .(power, X_step_)]
 
 
+#make wide to long
+rep_means_long <- data.table::melt(rep_means,
+        id = c("power", "X_step_"),
+        measure.vars = c("Null_1",
+                        "Null_2",
+                        "Non_null"),
+        variable.name = "Effect_size")
 
 library(ggplot2)
 
 ggplot(dat2) +
-geom_line(aes(x = X_step_, y = hyp2, # hyp2!
+geom_line(aes(x = X_step_, y = hyp0, # hyp0!
              group = X_run_number_),
+          alpha = 0.01) +
+geom_line(aes(x = X_step_, y = hyp1, # hyp1!
+             group = X_run_number_),
+          alpha = 0.01) +
+geom_line(aes(x = X_step_, y = hyp2, # hyp2!
+          group = X_run_number_),
           alpha = 0.01) +
           ylab("Researcher studying non-null") +
           xlab("Study round") +
           ylim(c(0, 100)) +
-geom_line(data = rep_means, #means
-        aes(x = X_step_, y = mean_hyp)) +
+geom_line(data = rep_means_long, #means
+        aes(x = X_step_, y = value, color = Effect_size)) +
         facet_wrap(~power) +
         theme_bw() +
         ggtitle("One of three effects is non-null with a power of..")
@@ -122,14 +151,13 @@ ggsave("figures/3-hyp-1-non-null.png")
 dat <- read.csv("data/3-hyps-2-non-null-table.csv",
 skip = 6)
 
-
-
 dat_split <- split(dat, dat$power)
 
 
 improve_names <- function(x){
     x <- setDT(x)
     names(x) <- gsub("\\.", "_", names(x)) #get rid of strange .names
+    #EDIT: check indices below when updating dataset!
     names(x)[9:11] <- c("hyp0", "hyp1", "hyp2") #for multiple hyps
     x
 }
@@ -141,21 +169,41 @@ dat_split2 <- lapply(dat_split, improve_names)
 #recombine
 dat2 <- data.table::rbindlist(dat_split2)
 
-rep_means <- dat2[,.(mean_hyp = mean(hyp0)),
-                  by = .(power,X_step_)]
+rep_means <- dat2[,.(Null = mean(hyp0),
+                    Non_null_1 = mean(hyp1),
+                    Non_null_2 = mean(hyp2)),
+                  by = .(power, X_step_)]
 
+
+#make wide to long
+rep_means_long <- data.table::melt(rep_means,
+        id = c("power", "X_step_"),
+        measure.vars = c("Null",
+                        "Non_null_1",
+                        "Non_null_2"),
+        variable.name = "Effect_size")
+
+
+#Plot
 ggplot(dat2) +
 geom_line(aes(x = X_step_, y = hyp0, # hyp0!
              group = X_run_number_),
           alpha = 0.01) +
-          ylab("Researchers studying null") +
+geom_line(aes(x = X_step_, y = hyp1, # hyp1!
+             group = X_run_number_),
+          alpha = 0.01) +
+geom_line(aes(x = X_step_, y = hyp2, # hyp2!
+          group = X_run_number_),
+          alpha = 0.01) +
+          ylab("Researcher studying non-null") +
           xlab("Study round") +
           ylim(c(0, 100)) +
-geom_line(data = rep_means, #means
-        aes(x = X_step_, y = mean_hyp)) +
+geom_line(data = rep_means_long, #means
+        aes(x = X_step_, y = value, color = Effect_size)) +
         facet_wrap(~power) +
         theme_bw() +
         ggtitle("Two of three effects is non-null with a power of..")
+
 ggsave("figures/3-hyp-2-non-null.png")
 
 
@@ -169,7 +217,7 @@ dat_split <- split(dat, dat$power)
 improve_names <- function(x){
     x <- setDT(x)
     names(x) <- gsub("\\.", "_", names(x)) #get rid of strange .names
-    names(x)[9:11] <- c("hyp0", "hyp1", "hyp2") #for multiple hyps
+    names(x)[10:12] <- c("hyp0", "hyp1", "hyp2") #for multiple hyps
     x
 }
 
@@ -183,25 +231,38 @@ dat2 <- data.table::rbindlist(dat_split2)
 ## How to summarize this in a nice way?
 ## Maybe just show all the lines?
 
-rep_means <- dat2[,.(mean_hyp0 = mean(hyp0),
-                    mean_hyp1 = mean(hyp1),
-                    mean_hyp2 = mean(hyp2)),
-                  by = .(power,X_step_)]
+rep_means <- dat2[,.(Null = mean(hyp0),
+                    Power_var = mean(hyp1),
+                    Power_0.8 = mean(hyp2)),
+                  by = .(power, X_step_)]
 
+#make wide to long
+rep_means_long <- data.table::melt(rep_means,
+        id = c("power", "X_step_"),
+        measure.vars = c("Null",
+                        "Power_var",
+                        "Power_0.8"))
 #Plot must be different then, can't split by power anymore
 
 ggplot(dat2) +
 geom_line(aes(x = X_step_, y = hyp0, # hyp0!
              group = X_run_number_),
           alpha = 0.01) +
+geom_line(aes(x = X_step_, y = hyp1, # hyp1!
+             group = X_run_number_),
+          alpha = 0.01) +
+geom_line(aes(x = X_step_, y = hyp2, # hyp2!
+             group = X_run_number_),
+          alpha = 0.01) +
           ylab("Researchers studying null") +
           xlab("Study round") +
           ylim(c(0, 100)) +
-geom_line(data = rep_means, #means
-        aes(x = X_step_, y = mean_hyp)) +
+geom_line(data = rep_means_long, #means
+        aes(x = X_step_, y = value, color = variable)) +
         facet_wrap(~power) +
         theme_bw() +
         ggtitle("Two of three effects is non-null with a power of..")
+
 
 ggsave("figures/3-hyp-2-varying-non-null.png")
 
