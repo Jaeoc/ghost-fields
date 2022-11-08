@@ -117,7 +117,7 @@ ggsave("figures/3-hyp-1-non-null.png")
 
 
 
-# Summary for three hypotheses, 2 non-null
+# Summary for three hypotheses, 2 equal non-null
 #***************************
 dat <- read.csv("data/3-hyps-2-non-null-table.csv",
 skip = 6)
@@ -159,6 +159,51 @@ geom_line(data = rep_means, #means
 ggsave("figures/3-hyp-2-non-null.png")
 
 
+# Summary for three hypotheses, 2 varying non-null
+#***************************
+dat <- read.csv("data/3-hyps-2-varying-non-null.csv",
+skip = 6)
+
+dat_split <- split(dat, dat$power)
+
+improve_names <- function(x){
+    x <- setDT(x)
+    names(x) <- gsub("\\.", "_", names(x)) #get rid of strange .names
+    names(x)[9:11] <- c("hyp0", "hyp1", "hyp2") #for multiple hyps
+    x
+}
+
+#apply to list
+dat_split2 <- lapply(dat_split, improve_names)
+
+#create list of means
+#recombine
+dat2 <- data.table::rbindlist(dat_split2)
+
+## How to summarize this in a nice way?
+## Maybe just show all the lines?
+
+rep_means <- dat2[,.(mean_hyp0 = mean(hyp0),
+                    mean_hyp1 = mean(hyp1),
+                    mean_hyp2 = mean(hyp2)),
+                  by = .(power,X_step_)]
+
+#Plot must be different then, can't split by power anymore
+
+ggplot(dat2) +
+geom_line(aes(x = X_step_, y = hyp0, # hyp0!
+             group = X_run_number_),
+          alpha = 0.01) +
+          ylab("Researchers studying null") +
+          xlab("Study round") +
+          ylim(c(0, 100)) +
+geom_line(data = rep_means, #means
+        aes(x = X_step_, y = mean_hyp)) +
+        facet_wrap(~power) +
+        theme_bw() +
+        ggtitle("Two of three effects is non-null with a power of..")
+
+ggsave("figures/3-hyp-2-varying-non-null.png")
 
 # some tests*************************************
 test <- dat_split[[10]]

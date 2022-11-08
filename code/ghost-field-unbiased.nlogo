@@ -30,6 +30,9 @@ to setup
 
 
   let non-null n-values non-null-effects [power] ;list of non-null effects with power = power
+  if (non-null-effects = 2) [ ;hard-coded to max 2 non-null effects!
+    set non-null replace-item 1 non-null power2
+  ]
   let ES-list sentence (n-values (num-hyps - non-null-effects) [0.05]) non-null ;combine with null effects
 
   let iterator -1 ;see below. Based on answer in: from https://stackoverflow.com/questions/47696190/netlogo-how-to-assign-a-value-to-a-variable-from-an-existing-string-list
@@ -246,7 +249,7 @@ SLIDER
 num-hyps
 num-hyps
 1
-100
+3
 3.0
 1
 1
@@ -270,9 +273,9 @@ HORIZONTAL
 
 PLOT
 370
-360
+230
 635
-600
+470
 Prop. sig
 NIL
 NIL
@@ -289,10 +292,10 @@ PENS
 "pen-2" 1.0 0 -16777216 true "" "plotxy ticks power"
 
 PLOT
-15
-360
-360
-600
+20
+230
+365
+470
 Researcher per topic
 NIL
 NIL
@@ -332,7 +335,7 @@ SLIDER
 non-null-effects
 non-null-effects
 0
-100
+2
 2.0
 1
 1
@@ -364,6 +367,21 @@ stop-if-zero?
 1
 1
 -1000
+
+SLIDER
+205
+180
+377
+213
+power2
+power2
+0
+1
+0.8
+0.05
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -823,6 +841,47 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="non-null-effects">
       <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="3-hyps-2-varying-non-null" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>count researchers with [hypothesis = 0]</metric>
+    <metric>count researchers with [hypothesis = 1]</metric>
+    <metric>count researchers with [hypothesis = 2]</metric>
+    <enumeratedValueSet variable="stop-if-zero?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="power">
+      <value value="0"/>
+      <value value="0.05"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.3"/>
+      <value value="0.4"/>
+      <value value="0.5"/>
+      <value value="0.6"/>
+      <value value="0.7"/>
+      <value value="0.8"/>
+      <value value="0.9"/>
+      <value value="0.95"/>
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="power2">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-researchers">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-hyps">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-memory">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="non-null-effects">
+      <value value="2"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
