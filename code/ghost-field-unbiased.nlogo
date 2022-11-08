@@ -47,7 +47,9 @@ end
 
 to go
 
+  if stop-if-zero? [ ;If true, then stop if zero. Only useful when working interactively
   if any-abandoned? [stop] ;stop if some topic has zero researchers, only happens when power >= .95
+  ]
 
   ask researchers [
     let draw random-float 1 ;each researcher draws a random value from 0 - 1
@@ -351,6 +353,17 @@ power
 1
 NIL
 HORIZONTAL
+
+SWITCH
+295
+25
+417
+58
+stop-if-zero?
+stop-if-zero?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -706,6 +719,9 @@ NetLogo 6.2.2
     <metric>count researchers with [hypothesis = 0]</metric>
     <metric>count researchers with [hypothesis = 1]</metric>
     <metric>count researchers with [hypothesis = 2]</metric>
+    <enumeratedValueSet variable="stop-if-zero?">
+      <value value="false"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="power">
       <value value="0"/>
       <value value="0.05"/>
@@ -741,6 +757,9 @@ NetLogo 6.2.2
     <metric>count researchers with [hypothesis = 0]</metric>
     <metric>count researchers with [hypothesis = 1]</metric>
     <metric>count researchers with [hypothesis = 2]</metric>
+    <enumeratedValueSet variable="stop-if-zero?">
+      <value value="false"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="power">
       <value value="0"/>
       <value value="0.05"/>
