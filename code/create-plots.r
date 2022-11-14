@@ -8,7 +8,7 @@
 
 library(data.table)
 
-dat <- read.csv("data/2-hyps-1-null-table.csv",
+dat <- read.csv("data/2-hyps-1-null-reluctant.csv",
 skip = 6)
 
 dat_split <- split(dat, dat$power)
@@ -33,7 +33,7 @@ dat_split <- split(dat, dat$power)
 improve_names <- function(x){
     x <- setDT(x)
     names(x) <- gsub("\\.", "_", names(x)) #get rid of strange .names
-    names(x)[9:10] <- c("hyp0", "hyp1")
+    names(x)[10:11] <- c("hyp0", "hyp1")
     x
 }
 

@@ -11,9 +11,9 @@ topics-own [ID evidence ES]
 
 
 
-;globals [ ;currently not used
-; prop-sig
-; ]
+globals [
+   memory-probs
+]
 
 to setup
   clear-all
@@ -68,22 +68,30 @@ to go
     set memory remove-item 5 memory ;drop the last item, netlogo counts from 0
 
     ;study same topic? Probabilities based on memory with yes/no in the end
+    if (memory-curve = "original")[
+      set memory-probs (list 1 0.95 0.8 0.5 0.2 0)
+    ]
+    if (memory-curve = "reluctant")[
+      set memory-probs (list 1 0.99 0.95 0.5 0.2 0)
+    ]
+
+
     let num-non-sig 5 - sum memory
 
     if num-non-sig = 0 [set continue 1]
-    if num-non-sig = 1 [ifelse random-float 1 > 0.95
+    if num-non-sig = 1 [ifelse random-float 1 > (item 1 memory-probs)
       [set continue 1]
       [set continue 0]
     ]
-    if num-non-sig = 2 [ifelse random-float 1 > 0.8
+    if num-non-sig = 2 [ifelse random-float 1 > (item 2 memory-probs)
       [set continue 1]
       [set continue 0]
     ]
-    if num-non-sig = 3 [ifelse random-float 1 > 0.5
+    if num-non-sig = 3 [ifelse random-float 1 > (item 3 memory-probs)
       [set continue 1]
       [set continue 0]
     ]
-    if num-non-sig = 4 [ifelse random-float 1 > 0.2
+    if num-non-sig = 4 [ifelse random-float 1 > (item 4 memory-probs)
       [set continue 1]
       [set continue 0]
     ]
@@ -250,7 +258,7 @@ num-hyps
 num-hyps
 1
 3
-3.0
+2.0
 1
 1
 NIL
@@ -273,9 +281,9 @@ HORIZONTAL
 
 PLOT
 370
-230
+320
 635
-470
+560
 Prop. sig
 NIL
 NIL
@@ -292,10 +300,10 @@ PENS
 "pen-2" 1.0 0 -16777216 true "" "plotxy ticks power"
 
 PLOT
-20
-230
-365
-470
+15
+320
+360
+560
 Researcher per topic
 NIL
 NIL
@@ -336,7 +344,7 @@ non-null-effects
 non-null-effects
 0
 2
-2.0
+1.0
 1
 1
 NIL
@@ -382,6 +390,16 @@ power2
 1
 NIL
 HORIZONTAL
+
+CHOOSER
+60
+225
+198
+270
+memory-curve
+memory-curve
+"original" "reluctant"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -882,6 +900,46 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="non-null-effects">
       <value value="2"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="2-hyps-1-null-reluctant" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>count researchers with [hypothesis = 0]</metric>
+    <metric>count researchers with [hypothesis = 1]</metric>
+    <enumeratedValueSet variable="stop-if-zero?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="power">
+      <value value="0"/>
+      <value value="0.05"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.3"/>
+      <value value="0.4"/>
+      <value value="0.5"/>
+      <value value="0.6"/>
+      <value value="0.7"/>
+      <value value="0.8"/>
+      <value value="0.9"/>
+      <value value="0.95"/>
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-researchers">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-hyps">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-memory">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="non-null-effects">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="memory-curve">
+      <value value="&quot;original&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
