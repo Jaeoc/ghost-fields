@@ -3,11 +3,17 @@ extensions [ rnd ] ;for weighted random value
 breed [researchers researcher]
 breed [topics topic]
 
-researchers-own [hypothesis
+researchers-own [
+  hypothesis
   result
   memory ;nb! Positive result = 1, negative = 0. Start studying a topic with zero negative results (i.e., all 1s)
-  continue]
-topics-own [ID evidence ES]
+  continue
+]
+topics-own [
+  ID
+  evidence
+  ES
+]
 
 
 
@@ -73,6 +79,9 @@ to go
     ]
     if (memory-curve = "reluctant")[
       set memory-probs (list 1 0.99 0.95 0.5 0.2 0)
+    ]
+    if (memory-curve = "rational")[
+      set memory-probs rational-memory study-power
     ]
 
 
@@ -158,7 +167,23 @@ to-report any-abandoned?
   report min num-adherents = 0
 end
 
+to-report rational-memory [study-power]
+  let k range 5 ;0 1 2 3 4 significant results
+  let beta 1 - study-power
+  let n 5
+  let alpha 0.05
+  let rational-probs n-values 5 [1]
 
+  foreach k [k_i ->
+    let numerator (study-power ^ k_i) * (beta ^(n - k_i))
+    let denominator numerator + (alpha ^ k_i) * ((1 - alpha) ^ (n - k_i))
+    let p_i numerator / denominator
+    set rational-probs replace-item k_i rational-probs p_i
+  ]
+
+  report reverse rational-probs ;reverse, because rational-probs is a list for sig. and we want a list of probs for non-sig
+
+end
 ;to assign-topic-id ;from https://stackoverflow.com/questions/47696190/netlogo-how-to-assign-a-value-to-a-variable-from-an-existing-string-list
 ;  let iterator -1
 ;  ask topics ;NB. ask goes in random order. Iteration will only go to number of topics so won't overshoot
@@ -398,8 +423,8 @@ CHOOSER
 270
 memory-curve
 memory-curve
-"original" "reluctant"
-0
+"original" "reluctant" "rational"
+2
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -939,7 +964,47 @@ NetLogo 6.2.2
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="memory-curve">
-      <value value="&quot;original&quot;"/>
+      <value value="&quot;reluctant&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="2-hyps-1-null-rational" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>count researchers with [hypothesis = 0]</metric>
+    <metric>count researchers with [hypothesis = 1]</metric>
+    <enumeratedValueSet variable="stop-if-zero?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="power">
+      <value value="0"/>
+      <value value="0.05"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.3"/>
+      <value value="0.4"/>
+      <value value="0.5"/>
+      <value value="0.6"/>
+      <value value="0.7"/>
+      <value value="0.8"/>
+      <value value="0.9"/>
+      <value value="0.95"/>
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-researchers">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-hyps">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-memory">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="non-null-effects">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="memory-curve">
+      <value value="&quot;rational&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
