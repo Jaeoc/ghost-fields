@@ -8,10 +8,6 @@
 
 library(data.table)
 
-dat <- read.csv("data/2-hyps-1-null-reluctant.csv",
-skip = 6)
-
-dat_split <- split(dat, dat$power)
 
 # We have tree lines per power level + 100 reps
 # Seems to always be hypothesis = 2 that is non-null
@@ -26,40 +22,92 @@ dat_split <- split(dat, dat$power)
 
 #take the mean at each step of the counts
 
-# Summary for two hypotheses
+# Functions for two hypotheses
 #***************************
-
-#We will use only the non-null, this summarizes well the rest
 improve_names <- function(x){
     x <- setDT(x)
-    names(x) <- gsub("\\.", "_", names(x)) #get rid of strange .names
-    names(x)[10:11] <- c("hyp0", "hyp1")
+    to_replace <- grep("hypothesis", names(dat))
+
+    if (length(to_replace) == 2){
+        names(x)[to_replace] <- c("hyp0", "hyp1")
+    } else if(length(to_replace) == 3){
+        names(x)[to_replace] <- c("hyp0", "hyp1", "hyp2")
+    }
+
+    names(x) <- gsub("\\.", "_", names(x)) #also get rid of strange .names
     x
 }
 
-#apply to list
-dat_split2 <- lapply(dat_split, improve_names)
+clean_hyps <- function(dat){
+    dat_split <- split(dat, dat$power)
+    dat_split2 <- lapply(dat_split, improve_names)
+    #recombine
+    data.table::rbindlist(dat_split2)
+}
 
-#create list of means
-#recombine
-dat2 <- data.table::rbindlist(dat_split2)
+create_means <- function(dat2){
+    n_hyps <- grep("^hyp", names(dat2))
+    if (length(n_hyps) == 2){
+        cols_to_average <- paste0("hyp", 0:1)
+    } else if (length(n_hyps) == 3){
+        cols_to_average <- paste0("hyp", 0:2)
+    }
 
-rep_means <- dat2[,.(Null = mean(hyp0),
-                    Non_null = mean(hyp1)),
-                  by = .(power, X_step_)]
+    #average by group
+    rep_means <- dat2[,lapply(.SD, mean),
+                  by = .(power, X_step_),
+                  .SDcols = cols_to_average] # See Section 2f:https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html
+
+    #make wide to long
+   rep_means_long <-  data.table::melt(rep_means,
+            id = c("power", "X_step_"),
+            #NB! when measure.vars missing, melts all non-id vars
+            #Hence, doesn't matter if two or three columns
+            variable.name = "Effect_size")
+}
 
 
-#make wide to long
-rep_means_long <- data.table::melt(rep_means,
-        id = c("power", "X_step_"),
-        measure.vars = c("Null",
-                        "Non_null"),
-        variable.name = "Effect_size")
 
+#********************************
+#2 hyps
+dat <- read.csv("data/2-hyps-1-null.csv",
+skip = 6)
+dat <- read.csv("data/2-hyps-1-null-reluctant.csv",
+skip = 6)
+dat <- read.csv("data/2-hyps-1-null-rational.csv",
+skip = 6)
+dat2 <- clean_hyps(dat)
+rep_means_long <- create_means(dat2)
+levels(rep_means_long$Effect_size) <- c("Null", "Non-null")
 
+#3 hyps, 1 non-null
+dat <- read.csv("data/3-hyps-1-non-null.csv",
+skip = 6)
+dat2 <- clean_hyps(dat)
+rep_means_long <- create_means(dat2)
+levels(rep_means_long$Effect_size) <- c("Null_1", "Null_2", "Non_null")
+
+# 3 hyps, 2 equal non-null
+dat <- read.csv("data/3-hyps-2-non-null-table.csv",
+skip = 6)
+dat2 <- clean_hyps(dat)
+rep_means_long <- create_means(dat2)
+levels(rep_means_long$Effect_size) <- c("Null", "Non-Null_1",
+ "non-Null_2")
+
+#3 hyps, one fixed, one varying non-null
+dat <- read.csv("data/3-hyps-2-varying-non-null.csv",
+skip = 6)
+dat2 <- clean_hyps(dat)
+rep_means_long <- create_means(dat2)
+levels(rep_means_long$Effect_size) <- c("Null", "var_power", "power_0.8")
+
+#***************************
+#Plot
+#***************************
 library(ggplot2)
 
-ggplot(dat2) +
+ggplot(dat2[X_step_ <= 50,]) +
 geom_line(aes(x = X_step_, y = hyp0, #raw curves, hyp0!
              group = X_run_number_),
           alpha = 0.01) +
@@ -69,251 +117,15 @@ geom_line(aes(x = X_step_, y = hyp1, #raw curves, hyp1!
           ylab("Researcher studying non-null") +
           xlab("Study round") +
           ylim(c(0, 100)) +
-geom_line(data = rep_means_long, #means
+geom_line(data = rep_means_long[X_step_  <= 50,], #means
         aes(x = X_step_, y = value, color = Effect_size)) + #hyp1
         facet_wrap(~power) +
         theme_bw() +
         ggtitle("One of two effects is non-null with a power of..")
 
-ggsave("figures/2-hyp-1-non-null.png")
-
-
-
-
-
-# Summary for three hypotheses
-#***************************
-library(data.table)
-
-dat <- read.csv("data/3-hyps-1-non-null.csv",
-skip = 6)
-
-dat_split <- split(dat, dat$power)
-
-
-improve_names <- function(x){
-    x <- setDT(x)
-    names(x) <- gsub("\\.", "_", names(x)) #get rid of strange .names
-    #EDIT: check indices below when updating dataset!
-    names(x)[9:11] <- c("hyp0", "hyp1", "hyp2") #for multiple hyps
-    x
-}
-
-#apply to list
-dat_split2 <- lapply(dat_split, improve_names)
-
-#create list of means
-#recombine
-dat2 <- data.table::rbindlist(dat_split2)
-
-rep_means <- dat2[,.(Null_1 = mean(hyp0),
-                    Null_2 = mean(hyp1),
-                    Non_null = mean(hyp2)),
-                  by = .(power, X_step_)]
-
-
-#make wide to long
-rep_means_long <- data.table::melt(rep_means,
-        id = c("power", "X_step_"),
-        measure.vars = c("Null_1",
-                        "Null_2",
-                        "Non_null"),
-        variable.name = "Effect_size")
-
-library(ggplot2)
-
-ggplot(dat2) +
-geom_line(aes(x = X_step_, y = hyp0, # hyp0!
-             group = X_run_number_),
-          alpha = 0.01) +
-geom_line(aes(x = X_step_, y = hyp1, # hyp1!
-             group = X_run_number_),
-          alpha = 0.01) +
-geom_line(aes(x = X_step_, y = hyp2, # hyp2!
-          group = X_run_number_),
-          alpha = 0.01) +
-          ylab("Researcher studying non-null") +
-          xlab("Study round") +
-          ylim(c(0, 100)) +
-geom_line(data = rep_means_long, #means
-        aes(x = X_step_, y = value, color = Effect_size)) +
-        facet_wrap(~power) +
-        theme_bw() +
-        ggtitle("One of three effects is non-null with a power of..")
-
-ggsave("figures/3-hyp-1-non-null.png")
-
-
-
-
-# Summary for three hypotheses, 2 equal non-null
-#***************************
-dat <- read.csv("data/3-hyps-2-non-null-table.csv",
-skip = 6)
-
-dat_split <- split(dat, dat$power)
-
-
-improve_names <- function(x){
-    x <- setDT(x)
-    names(x) <- gsub("\\.", "_", names(x)) #get rid of strange .names
-    #EDIT: check indices below when updating dataset!
-    names(x)[9:11] <- c("hyp0", "hyp1", "hyp2") #for multiple hyps
-    x
-}
-
-#apply to list
-dat_split2 <- lapply(dat_split, improve_names)
-
-#create list of means
-#recombine
-dat2 <- data.table::rbindlist(dat_split2)
-
-rep_means <- dat2[,.(Null = mean(hyp0),
-                    Non_null_1 = mean(hyp1),
-                    Non_null_2 = mean(hyp2)),
-                  by = .(power, X_step_)]
-
-
-#make wide to long
-rep_means_long <- data.table::melt(rep_means,
-        id = c("power", "X_step_"),
-        measure.vars = c("Null",
-                        "Non_null_1",
-                        "Non_null_2"),
-        variable.name = "Effect_size")
-
-
-#Plot
-ggplot(dat2) +
-geom_line(aes(x = X_step_, y = hyp0, # hyp0!
-             group = X_run_number_),
-          alpha = 0.01) +
-geom_line(aes(x = X_step_, y = hyp1, # hyp1!
-             group = X_run_number_),
-          alpha = 0.01) +
-geom_line(aes(x = X_step_, y = hyp2, # hyp2!
-          group = X_run_number_),
-          alpha = 0.01) +
-          ylab("Researcher studying non-null") +
-          xlab("Study round") +
-          ylim(c(0, 100)) +
-geom_line(data = rep_means_long, #means
-        aes(x = X_step_, y = value, color = Effect_size)) +
-        facet_wrap(~power) +
-        theme_bw() +
-        ggtitle("Two of three effects is non-null with a power of..")
-
-ggsave("figures/3-hyp-2-non-null.png")
-
-
-# Summary for three hypotheses, 2 varying non-null
-#***************************
-dat <- read.csv("data/3-hyps-2-varying-non-null.csv",
-skip = 6)
-
-dat_split <- split(dat, dat$power)
-
-improve_names <- function(x){
-    x <- setDT(x)
-    names(x) <- gsub("\\.", "_", names(x)) #get rid of strange .names
-    names(x)[10:12] <- c("hyp0", "hyp1", "hyp2") #for multiple hyps
-    x
-}
-
-#apply to list
-dat_split2 <- lapply(dat_split, improve_names)
-
-#create list of means
-#recombine
-dat2 <- data.table::rbindlist(dat_split2)
-
-## How to summarize this in a nice way?
-## Maybe just show all the lines?
-
-rep_means <- dat2[,.(Null = mean(hyp0),
-                    Power_var = mean(hyp1),
-                    Power_0.8 = mean(hyp2)),
-                  by = .(power, X_step_)]
-
-#make wide to long
-rep_means_long <- data.table::melt(rep_means,
-        id = c("power", "X_step_"),
-        measure.vars = c("Null",
-                        "Power_var",
-                        "Power_0.8"))
-#Plot must be different then, can't split by power anymore
-
-ggplot(dat2) +
-geom_line(aes(x = X_step_, y = hyp0, # hyp0!
-             group = X_run_number_),
-          alpha = 0.01) +
-geom_line(aes(x = X_step_, y = hyp1, # hyp1!
-             group = X_run_number_),
-          alpha = 0.01) +
-geom_line(aes(x = X_step_, y = hyp2, # hyp2!
-             group = X_run_number_),
-          alpha = 0.01) +
-          ylab("Researchers studying null") +
-          xlab("Study round") +
-          ylim(c(0, 100)) +
-geom_line(data = rep_means_long, #means
-        aes(x = X_step_, y = value, color = variable)) +
-        facet_wrap(~power) +
-        theme_bw() +
-        ggtitle("Two of three effects is non-null with a power of..")
-
-
+#ggsave("figures/2-hyp-1-null.png")
+#ggsave("figures/2-hyp-1-null-reluctant.png")
+#ggsave("figures/2-hyp-1-null-rational.png")
+#ggsave("figures/3-hyp-1-non-null.png")
+#ggsave("figures/3-hyp-2-non-null.png")
 ggsave("figures/3-hyp-2-varying-non-null.png")
-
-# some tests*************************************
-test <- dat_split[[10]]
-test <- setDT(dat_split[[10]])
-names(test) <- gsub("\\.", "_", names(test))
-names(test)[9:11] <- c("hyp0", "hyp1", "hyp2")
-
-test[, .(mean_hyp0 = mean(hyp0),
-        mean_hyp1 = mean(hyp1),
-        mean_hyp2 = mean(hyp2)),
-        by = X_step_]
-
-#both work
-
-#tidyverse
-library(dplyr)
-test2 <- test %>% group_by(X_step_) %>%
-summarize(hyp0 = mean(hyp0),
-          hyp1 = mean(hyp1))
-
-
-#works
-#Now apply to list
-
-#Above section as a function
-get_means <- function(x){
-    x <- setDT(x)
-    names(x) <- gsub("\\.", "_", names(x)) #get rid of strange .names
-    names(x)[9:11] <- c("hyp0", "hyp1", "hyp2")
-
-    x[, .(mean_hyp0 = mean(hyp0), #out
-        mean_hyp1 = mean(hyp1),
-        mean_hyp2 = mean(hyp2)),
-        by = X_step_]
-}
-
-#apply to list
-dat_split2 <- lapply(dat_split, get_means)
-
-#recombine
-dat2 <- data.table::rbindlist(dat_split2,
-                              idcol = "power")
-
-#make wide to long
-dat3 <- data.table::melt(dat2,
-        id = c("power", "X_step_"),
-        measure.vars = c("mean_hyp0",
-                        "mean_hyp1",
-                        "mean_hyp2"))
-
-
-#************************************

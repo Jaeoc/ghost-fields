@@ -84,28 +84,38 @@ to go
       set memory-probs rational-memory study-power
     ]
 
-
     let num-non-sig 5 - sum memory
 
-    if num-non-sig = 0 [set continue 1]
-    if num-non-sig = 1 [ifelse random-float 1 > (item 1 memory-probs)
-      [set continue 1]
-      [set continue 0]
+    ;troubleshooting
+    if (troubleshoot-memory-probs?) [
+     print memory-probs
     ]
-    if num-non-sig = 2 [ifelse random-float 1 > (item 2 memory-probs)
-      [set continue 1]
-      [set continue 0]
-    ]
-    if num-non-sig = 3 [ifelse random-float 1 > (item 3 memory-probs)
-      [set continue 1]
-      [set continue 0]
-    ]
-    if num-non-sig = 4 [ifelse random-float 1 > (item 4 memory-probs)
-      [set continue 1]
-      [set continue 0]
-    ]
-    if num-non-sig = 5 [set continue 0]
 
+    if num-non-sig = 0 [ifelse random-float 1 < (item 0 memory-probs)
+      [set continue 1]
+      [set continue 0]
+    ]
+    if num-non-sig = 1 [ifelse random-float 1 < (item 1 memory-probs)
+      [set continue 1]
+      [set continue 0]
+    ]
+    if num-non-sig = 2 [ifelse random-float 1 < (item 2 memory-probs)
+      [set continue 1]
+      [set continue 0]
+    ]
+    if num-non-sig = 3 [ifelse random-float 1 < (item 3 memory-probs)
+      [set continue 1]
+      [set continue 0]
+    ]
+    if num-non-sig = 4 [ifelse random-float 1 < (item 4 memory-probs)
+      [set continue 1]
+      [set continue 0]
+    ]
+
+    if num-non-sig = 5 [ifelse random-float 1 < (item 5 memory-probs)
+      [set continue 1]
+      [set continue 0]
+    ]
   ]
 
   ; next, update evidence on topics that can be used to select topic
@@ -168,11 +178,11 @@ to-report any-abandoned?
 end
 
 to-report rational-memory [study-power]
-  let k range 5 ;0 1 2 3 4 significant results
+  let k range 6 ;0 1 2 3 4 5 significant results
   let beta 1 - study-power
   let n 5
   let alpha 0.05
-  let rational-probs n-values 5 [1]
+  let rational-probs n-values 6 [1]
 
   foreach k [k_i ->
     let numerator (study-power ^ k_i) * (beta ^(n - k_i))
@@ -283,7 +293,7 @@ num-hyps
 num-hyps
 1
 3
-2.0
+3.0
 1
 1
 NIL
@@ -369,7 +379,7 @@ non-null-effects
 non-null-effects
 0
 2
-1.0
+2.0
 1
 1
 NIL
@@ -424,7 +434,18 @@ CHOOSER
 memory-curve
 memory-curve
 "original" "reluctant" "rational"
-2
+1
+
+SWITCH
+260
+250
+472
+283
+troubleshoot-memory-probs?
+troubleshoot-memory-probs?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
