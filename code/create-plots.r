@@ -76,6 +76,7 @@ dat <- read.csv("data/2-hyps-1-null-reluctant.csv",
 skip = 6)
 dat <- read.csv("data/2-hyps-1-null-rational.csv",
 skip = 6)
+
 dat2 <- clean_hyps(dat)
 rep_means_long <- create_means(dat2)
 levels(rep_means_long$Effect_size) <- c("Null", "Non-null")
@@ -102,6 +103,13 @@ dat2 <- clean_hyps(dat)
 rep_means_long <- create_means(dat2)
 levels(rep_means_long$Effect_size) <- c("Null", "var_power", "power_0.8")
 
+#3 hyps, one fixed, one varying non-null, rational agents
+dat <- read.csv("data/3-hyps-2-varying-non-null-rational.csv",
+skip = 6)
+dat2 <- clean_hyps(dat)
+rep_means_long <- create_means(dat2)
+levels(rep_means_long$Effect_size) <- c("Null", "var_power", "power_0.8")
+
 #***************************
 #Plot
 #***************************
@@ -114,18 +122,18 @@ geom_line(aes(x = X_step_, y = hyp0, #raw curves, hyp0!
 geom_line(aes(x = X_step_, y = hyp1, #raw curves, hyp1!
              group = X_run_number_),
           alpha = 0.01) +
-          ylab("Researcher studying non-null") +
+          ylab("Researchers per hypothesis") +
           xlab("Study round") +
           ylim(c(0, 100)) +
-geom_line(data = rep_means_long[X_step_  <= 50,], #means
+geom_line(data = rep_means_long[X_step_ <= 50,], #means
         aes(x = X_step_, y = value, color = Effect_size)) + #hyp1
         facet_wrap(~power) +
-        theme_bw() +
-        ggtitle("One of two effects is non-null with a power of..")
+        theme_bw()
 
-#ggsave("figures/2-hyp-1-null.png")
-#ggsave("figures/2-hyp-1-null-reluctant.png")
-#ggsave("figures/2-hyp-1-null-rational.png")
-#ggsave("figures/3-hyp-1-non-null.png")
-#ggsave("figures/3-hyp-2-non-null.png")
-ggsave("figures/3-hyp-2-varying-non-null.png")
+# ggsave("figures/2-hyp-1-null.png")
+# ggsave("figures/2-hyp-1-null-reluctant.png")
+# ggsave("figures/2-hyp-1-null-rational.png")
+# ggsave("figures/3-hyp-1-non-null.png")
+# ggsave("figures/3-hyp-2-non-null.png")
+# ggsave("figures/3-hyp-2-varying-non-null.png")
+# ggsave("figures/3-hyp-2-varying-non-null-rational.png")
