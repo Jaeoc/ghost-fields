@@ -8,6 +8,7 @@ researchers-own [
   result
   memory ;nb! Positive result = 1, negative = 0. Start studying a topic with zero negative results (i.e., all 1s)
   continue
+  published ;indicator of if the last study result was successfully published
 ]
 topics-own [
   ID
@@ -61,6 +62,7 @@ to go
   ]
 
   ask researchers [
+    ; Each researcher draws a study result
     let draw random-float 1 ;each researcher draws a random value from 0 - 1
     let study-topic hypothesis
     let study-power item 0 ([ES] of topics with [ID = study-topic]); for some reason is a list despite single value, so must take item to be able to compare in next step
@@ -72,6 +74,11 @@ to go
     ;set first memory value to result, push the remainder forward and drop last
     set memory sentence result memory ;cbind
     set memory remove-item 5 memory ;drop the last item, netlogo counts from 0
+
+    ;Did the researcher successfully publish their study given journal-level publication bias?
+    ifelse random-float 1 > journal-publication-bias
+    [set published 1]
+    [set published 0]
 
     ;study same topic? Probabilities based on memory with yes/no in the end
     if (memory-curve = "original")[
@@ -91,6 +98,7 @@ to go
      print memory-probs
     ]
 
+    ; Each researcher decides whether to continue based on their most recent and historical results
     if num-non-sig = 0 [ifelse random-float 1 < (item 0 memory-probs)
       [set continue 1]
       [set continue 0]
@@ -116,15 +124,16 @@ to go
       [set continue 1]
       [set continue 0]
     ]
-  ]
+  ] ;end of ask researchers
 
-  ; next, update evidence on topics that can be used to select topic
+  ; next, update evidence on topics that can be used to select topic (i.e., literature)
+  ;Here publication bias plays in. For updating literature we only count researchers with published = 1
   foreach range num-hyps [hyp -> ;for each topic/hypothesis
     let n_sig found-sig hyp ;count number of significant this round
-    let adherents count researchers with [hypothesis = hyp] ;count how many people studying the topic this round
-    let non_sig adherents - n_sig ;compute non-sig
+    let number-of-studies count researchers with [hypothesis = hyp and published = 1] ;count how many people published their research on the topic
+    let non_sig number-of-studies - n_sig ;compute non-sig
 
-    ask topics with [ID = hyp] [ ;update evidence
+    ask topics with [ID = hyp] [ ;update evidence in literature on each topic
       set evidence replace-item 0 evidence (item 0 evidence + n_sig) ;old sig + new sig studies total
       set evidence replace-item 1 evidence (item 1 evidence + non_sig) ;old non-sig + new non-sig studies total
       set evidence replace-item 2 evidence (item 0 evidence / (item 0 evidence + item 1 evidence)) ;proportion significant studies for each topic
@@ -159,7 +168,7 @@ end
 
 to-report found-sig [hyp]
 
-   report sum [result] of researchers with [hypothesis = hyp] ;count first list item of..
+   report sum [result] of researchers with [hypothesis = hyp and published = 1] ;count first list item of..
   ; To check if working, change one researchers result to 1 and run > [result] of researchers with [hypothesis = 1]
 end
 
@@ -209,10 +218,10 @@ end
 ;  set prop-sig (sig / total)
 @#$#@#$#@
 GRAPHICS-WINDOW
-430
-15
-603
-189
+460
+620
+633
+794
 -1
 -1
 5.0
@@ -401,10 +410,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-295
-25
-417
-58
+280
+20
+402
+53
 stop-if-zero?
 stop-if-zero?
 1
@@ -427,25 +436,40 @@ NIL
 HORIZONTAL
 
 CHOOSER
-60
-225
-198
-270
+410
+85
+548
+130
 memory-curve
 memory-curve
 "original" "reluctant" "rational"
 2
 
 SWITCH
-260
-250
-472
-283
+455
+30
+660
+63
 troubleshoot-memory-probs?
 troubleshoot-memory-probs?
 1
 1
 -1000
+
+SLIDER
+205
+225
+377
+258
+journal-publication-bias
+journal-publication-bias
+0
+1
+0.0
+0.1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
