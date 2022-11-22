@@ -76,21 +76,27 @@ to go
     set memory remove-item 5 memory ;drop the last item, netlogo counts from 0
 
     ;Does the researcher themselves decide to publish, or put their result in the file drawer?
-    let file-drawer-effect 0
-
-    ifelse result = 1 ;set the file-drawer for significant effects to 5% of the one of non-significant effects
-    [set file-drawer-effect 0.05 * researcher-publication-bias] ;Actually, should probably just remove it for the sake of simplicity
-    [set file-drawer-effect researcher-publication-bias]
+    let file-drawer-effect 0 ;for significant results, no file-drawer effect
+    if (result = 0) [ ;for non-sig
+      set file-drawer-effect researcher-publication-bias
+    ]
 
     ifelse random-float 1 > file-drawer-effect
     [set published 1]
     [set published 0]
 
-    if (published = 1) [ ;Only if the researcher tries to publish their study (i.e., did not put in file-drawer already), see if they are successful
-    ;Did the researcher successfully publish their study given journal-level publication bias?
-    ifelse random-float 1 > journal-publication-bias
-    [set published 1]
-    [set published 0]
+    ;Does the researcher successfully publish their study given journal-level publication bias?
+    if (published = 1) [ ;Only if the researcher tries to publish their study (i.e., did not put in file-drawer already)
+
+      ;determine level of journal bias
+      let journal-bias 0 ;for significant effects
+      if (result = 0) [ ;for non-sig
+        set journal-bias journal-publication-bias
+      ]
+      ; try to publish
+      ifelse random-float 1 > journal-publication-bias
+      [set published 1]
+      [set published 0]
     ]
 
     ;study same topic? Probabilities based on memory with yes/no in the end
@@ -459,10 +465,10 @@ memory-curve
 2
 
 SWITCH
-455
-30
-660
-63
+415
+20
+620
+53
 troubleshoot-memory-probs?
 troubleshoot-memory-probs?
 1
