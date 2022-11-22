@@ -75,10 +75,23 @@ to go
     set memory sentence result memory ;cbind
     set memory remove-item 5 memory ;drop the last item, netlogo counts from 0
 
+    ;Does the researcher themselves decide to publish, or put their result in the file drawer?
+    let file-drawer-effect 0
+
+    ifelse result = 1 ;set the file-drawer for significant effects to 5% of the one of non-significant effects
+    [set file-drawer-effect 0.05 * researcher-publication-bias] ;Actually, should probably just remove it for the sake of simplicity
+    [set file-drawer-effect researcher-publication-bias]
+
+    ifelse random-float 1 > file-drawer-effect
+    [set published 1]
+    [set published 0]
+
+    if (published = 1) [ ;Only if the researcher tries to publish their study (i.e., did not put in file-drawer already), see if they are successful
     ;Did the researcher successfully publish their study given journal-level publication bias?
     ifelse random-float 1 > journal-publication-bias
     [set published 1]
     [set published 0]
+    ]
 
     ;study same topic? Probabilities based on memory with yes/no in the end
     if (memory-curve = "original")[
@@ -457,12 +470,27 @@ troubleshoot-memory-probs?
 -1000
 
 SLIDER
+25
+230
+197
+263
+journal-publication-bias
+journal-publication-bias
+0
+1
+0.0
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
 205
-225
-377
-258
-journal-publication-bias
-journal-publication-bias
+230
+380
+263
+researcher-publication-bias
+researcher-publication-bias
 0
 1
 0.0
