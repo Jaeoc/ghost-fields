@@ -1,0 +1,57 @@
+---
+title: "Parameters for null fields simulation"
+output: pdf_document
+---
+```{r setup, include=FALSE}
+# Project: Ghost fields
+# Script purpose: Create parameter table
+# Code: Anton Olsson Collentine (anton@olssoncollentine.com)
+
+
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+```
+
+
+```{r}
+library(kableExtra)
+
+parameter <- c("num-researchers",
+               "num-hyps",
+               "non-null-effects",
+               "length-memory",
+               "power",
+               "power2",
+               "journal-publication-bias",
+               "researcher-publication-bias",
+               "memory-curve",
+               "alpha")
+
+definition <- c("number of researchers",
+                "number of topics",
+                "number of true effects",
+                "number of own studies considered when deciding if changing topic",
+                "power of 1st true effect",
+                "power of 2nd true effect",
+                "bias against non-significant results at journal level",
+                "bias against non-significant results at researcher level",
+                "probability to change topic given number of non-significant own results",
+                "false positive rate")
+
+values <- c("100",
+            "{2, 3}",
+            "{0, 1, 2}",
+            "5",
+            "{0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 1}",
+            "0.8",
+            "{0, ??}",
+            "{0, ??}",
+            "{vote-counting, bayesian}",
+            "0.05")
+
+dat <- data.frame(parameter, definition, values)
+
+knitr::kable(dat, booktabs = FALSE) %>%
+column_spec(3, width = "7em") %>%
+row_spec(0, background = "black", color = "white")
+```
