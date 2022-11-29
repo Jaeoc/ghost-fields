@@ -72,8 +72,6 @@ create_means <- function(dat2){
 #2 hyps
 dat <- read.csv("data/2-hyps-1-null.csv",
 skip = 6)
-dat <- read.csv("data/2-hyps-1-null-reluctant.csv",
-skip = 6)
 dat <- read.csv("data/2-hyps-1-null-rational.csv",
 skip = 6)
 
@@ -115,6 +113,7 @@ levels(rep_means_long$Effect_size) <- c("Null", "var_power", "power_0.8")
 #***************************
 library(ggplot2)
 
+#2 hyps
 ggplot(dat2[X_step_ <= 50,]) +
 geom_line(aes(x = X_step_, y = hyp0, #raw curves, hyp0!
              group = X_run_number_),
@@ -133,7 +132,29 @@ geom_line(data = rep_means_long[X_step_ <= 50,], #means
 # ggsave("figures/2-hyp-1-null.png")
 # ggsave("figures/2-hyp-1-null-reluctant.png")
 # ggsave("figures/2-hyp-1-null-rational.png")
+
+#3 hyps
+ggplot(dat2) +
+geom_line(aes(x = X_step_, y = hyp0, #raw curves, hyp0!
+             group = X_run_number_),
+          alpha = 0.01) +
+geom_line(aes(x = X_step_, y = hyp1, #raw curves, hyp1!
+             group = X_run_number_),
+          alpha = 0.01) +
+geom_line(aes(x = X_step_, y = hyp2, #raw curves, hyp2!
+             group = X_run_number_),
+          alpha = 0.01) +
+          ylab("Researchers per hypothesis") +
+          xlab("Study round") +
+          ylim(c(0, 100)) +
+geom_line(data = rep_means_long, #means
+        aes(x = X_step_, y = value, color = Effect_size)) + #hyp1
+        facet_wrap(~power) +
+        theme_bw()
+
+
+
 # ggsave("figures/3-hyp-1-non-null.png")
 # ggsave("figures/3-hyp-2-non-null.png")
 # ggsave("figures/3-hyp-2-varying-non-null.png")
-# ggsave("figures/3-hyp-2-varying-non-null-rational.png")
+ggsave("figures/3-hyp-2-varying-non-null-rational.png")

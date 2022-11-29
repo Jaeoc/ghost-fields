@@ -55,3 +55,43 @@ knitr::kable(dat, booktabs = FALSE) %>%
 column_spec(3, width = "7em") %>%
 row_spec(0, background = "black", color = "white")
 ```
+
+
+```{r}
+
+num_hyps <- 3
+non_null <- 0:2
+varying <- 0:1
+
+a <- expand.grid("hyps" = num_hyps,
+            "non_null" = non_null,
+            "varying" =  varying)
+
+a <- a[-4,] #remove impossible row
+a[-c(1, 4),] #remove row with no non-null, not interesting
+
+#This gives us an unbiased case where we have 4 possibly interesting
+#things to run, basically the things I have run previously.
+
+#What happens when we apply publication bias though?
+# Is it relevant to apply it in all cases?
+
+#normalized prob is power / sum(powers)
+
+norm_prob <- function(pwer1, pwer_all){
+    pwer1 / sum(pwer_all)
+}
+
+#0.5 power (rational)
+#0.266 chance to switch on average
+#0.5 for 0.05 power
+# 0.38 for 0.8 pwer
+
+norm_prob(0.8, c(0.5, 0.05, 0.8))
+#0.59
+norm_prob(0.5, c(0.5, 0.05, 0.8))
+#0.37
+norm_prob(0.05, c(0.5, 0.05, 0.8))
+#0.037
+
+```
