@@ -156,5 +156,5 @@ geom_line(data = rep_means_long, #means
 
 # ggsave("figures/3-hyp-1-non-null.png")
 # ggsave("figures/3-hyp-2-non-null.png")
-# ggsave("figures/3-hyp-2-varying-non-null.png")
-ggsave("figures/3-hyp-2-varying-non-null-rational.png")
+# ggsave("figures/3-hyp-2-varying-non-null.png", width = 1.6*6, height = 6)
+ggsave("figures/3-hyp-2-varying-non-null-rational.png", width = 1.6*6, height = 6)

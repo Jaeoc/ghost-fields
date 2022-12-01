@@ -100,7 +100,7 @@ to go
     ]
 
     ;study same topic? Probabilities based on memory with yes/no in the end
-    if (memory-curve = "original")[
+    if (memory-curve = "vote-counter")[
       set memory-probs (list 1 0.95 0.8 0.5 0.2 0)
     ]
     if (memory-curve = "reluctant")[
@@ -422,7 +422,7 @@ power
 power
 0
 1
-1.0
+0.05
 0.05
 1
 NIL
@@ -461,8 +461,8 @@ CHOOSER
 130
 memory-curve
 memory-curve
-"original" "reluctant" "rational"
-2
+"vote-counter" "reluctant" "rational"
+0
 
 SWITCH
 415
@@ -962,7 +962,7 @@ NetLogo 6.2.2
       <value value="1"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="3-hyps-2-varying-non-null" repetitions="100" runMetricsEveryStep="true">
+  <experiment name="3-hyps-2-varying-non-null-vote-counter" repetitions="100" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="200"/>
@@ -1000,6 +1000,9 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="non-null-effects">
       <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="memory-curve">
+      <value value="&quot;vote-counter&quot;"/>
     </enumeratedValueSet>
   </experiment>
   <experiment name="2-hyps-1-null-rational" repetitions="100" runMetricsEveryStep="true">
