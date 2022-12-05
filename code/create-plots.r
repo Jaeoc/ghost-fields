@@ -108,6 +108,13 @@ dat2 <- clean_hyps(dat)
 rep_means_long <- create_means(dat2)
 levels(rep_means_long$Effect_size) <- c("Null", "var_power", "power_0.8")
 
+#Publication bias
+dat <- read.csv("data/3-hyps-publication-bias-30-power.csv",
+skip = 6)
+dat2 <- clean_hyps(dat)
+rep_means_long <- create_means(dat2)
+levels(rep_means_long$Effect_size) <- c("Null", "power_0.3", "power_0.8")
+
 #***************************
 #Plot
 #***************************
@@ -157,4 +164,27 @@ geom_line(data = rep_means_long, #means
 # ggsave("figures/3-hyp-1-non-null.png")
 # ggsave("figures/3-hyp-2-non-null.png")
 # ggsave("figures/3-hyp-2-varying-non-null.png", width = 1.6*6, height = 6)
-ggsave("figures/3-hyp-2-varying-non-null-rational.png", width = 1.6*6, height = 6)
+# ggsave("figures/3-hyp-2-varying-non-null-rational.png", width = 1.6*6, height = 6)
+
+
+# Publication bias plot
+ggplot(dat2) +
+geom_line(aes(x = X_step_, y = hyp0, #raw curves, hyp0!
+             group = X_run_number_),
+          alpha = 0.01) +
+geom_line(aes(x = X_step_, y = hyp1, #raw curves, hyp1!
+             group = X_run_number_),
+          alpha = 0.01) +
+geom_line(aes(x = X_step_, y = hyp2, #raw curves, hyp2!
+             group = X_run_number_),
+          alpha = 0.01) +
+          ylab("Researchers per hypothesis") +
+          xlab("Study round") +
+          ylim(c(0, 100)) +
+geom_line(data = rep_means_long, #means
+        aes(x = X_step_, y = value, color = Effect_size)) + #hyp1
+        facet_wrap(~journal_publication_bias) +
+        theme_bw()
+
+
+#  ggsave("figures/3-hyp-pub-bias-power-0.3.png", width = 1.6*6, height = 6)

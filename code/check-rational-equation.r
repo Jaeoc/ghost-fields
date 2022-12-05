@@ -37,7 +37,7 @@ numerator / denom
 
 n <- 5
 k <- 0:5
-power = c(0, 0.05, 0.30, 0.50, 0.80, 0.95, 1)
+power = c(0.05, 0.30, 0.50, 0.80, 0.95, 1)
 beta = 1 - power
 alpha = 0.05
 
