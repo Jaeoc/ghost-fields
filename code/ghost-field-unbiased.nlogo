@@ -27,7 +27,8 @@ to setup
 
   create-researchers num-researchers
   ask researchers [
-    set hypothesis one-of range num-hyps
+    ;set hypothesis one-of range num-hyps ;originaly randomly assing researchers to hyps. But this leads to problems when some hyp gets zero
+    set hypothesis item (who mod num-hyps) range num-hyps ;assign equally, see https://stackoverflow.com/questions/50541934/netlogo-assign-turtles-randomly-but-equally-to-different-groups
     set memory n-values length-memory [1] ;start with zero negatives.
     set continue 1 ;by default continue on the same topic
   ]
@@ -422,7 +423,7 @@ power
 power
 0
 1
-0.3
+0.8
 0.05
 1
 NIL
