@@ -422,7 +422,7 @@ power
 power
 0
 1
-0.05
+0.3
 0.05
 1
 NIL
@@ -484,7 +484,7 @@ journal-publication-bias
 journal-publication-bias
 0
 1
-0.0
+0.9
 0.1
 1
 NIL
@@ -1085,6 +1085,58 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="memory-curve">
       <value value="&quot;rational&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="publication-bias-30-power" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>count researchers with [hypothesis = 0]</metric>
+    <metric>count researchers with [hypothesis = 1]</metric>
+    <metric>count researchers with [hypothesis = 2]</metric>
+    <enumeratedValueSet variable="researcher-publication-bias">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stop-if-zero?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="troubleshoot-memory-probs?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-researchers">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="power">
+      <value value="0.3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="journal-publication-bias">
+      <value value="0"/>
+      <value value="0.5"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.3"/>
+      <value value="0.4"/>
+      <value value="0.5"/>
+      <value value="0.6"/>
+      <value value="0.7"/>
+      <value value="0.8"/>
+      <value value="0.9"/>
+      <value value="0.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="memory-curve">
+      <value value="&quot;vote-counter&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="power2">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-hyps">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-memory">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="non-null-effects">
+      <value value="2"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
