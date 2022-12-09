@@ -95,7 +95,7 @@ to go
         set journal-bias journal-publication-bias
       ]
       ; try to publish
-      ifelse random-float 1 > journal-publication-bias
+      ifelse random-float 1 > journal-bias
       [set published 1]
       [set published 0]
     ]
@@ -156,7 +156,10 @@ to go
     ask topics with [ID = hyp] [ ;update evidence in literature on each topic
       set evidence replace-item 0 evidence (item 0 evidence + n_sig) ;old sig + new sig studies total
       set evidence replace-item 1 evidence (item 1 evidence + non_sig) ;old non-sig + new non-sig studies total
-      set evidence replace-item 2 evidence (item 0 evidence / (item 0 evidence + item 1 evidence)) ;proportion significant studies for each topic
+      ifelse (item 0 evidence + item 1 evidence) = 0
+      [set evidence replace-item 2 evidence 0]
+      [set evidence replace-item 2 evidence (item 0 evidence / (item 0 evidence + item 1 evidence))]
+       ;proportion significant studies for each topic
     ]
   ]
 
@@ -423,7 +426,7 @@ power
 power
 0
 1
-0.8
+1.0
 0.05
 1
 NIL
@@ -485,7 +488,7 @@ journal-publication-bias
 journal-publication-bias
 0
 1
-0.9
+0.0
 0.1
 1
 NIL
@@ -1004,6 +1007,9 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="memory-curve">
       <value value="&quot;vote-counter&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="journal-publication-bias">
+      <value value="0"/>
     </enumeratedValueSet>
   </experiment>
   <experiment name="2-hyps-1-null-rational" repetitions="100" runMetricsEveryStep="true">
