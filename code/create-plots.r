@@ -163,7 +163,7 @@ geom_line(data = rep_means_long, #means
 
 # ggsave("figures/3-hyp-1-non-null.png")
 # ggsave("figures/3-hyp-2-non-null.png")
-# ggsave("figures/3-hyp-2-varying-non-null.png", width = 1.6*6, height = 6)
+ggsave("figures/3-hyp-2-varying-non-null.png", width = 1.6*6, height = 6)
 # ggsave("figures/3-hyp-2-varying-non-null-rational.png", width = 1.6*6, height = 6)
 
 
@@ -187,4 +187,4 @@ geom_line(data = rep_means_long, #means
         theme_bw()
 
 
-#  ggsave("figures/3-hyp-pub-bias-power-0.3.png", width = 1.6*6, height = 6)
+ ggsave("figures/3-hyp-pub-bias-power-0.3.png", width = 1.6*6, height = 6)
