@@ -23,6 +23,7 @@ num_researchers <- 100 #number of researchers
 num_hyps <- 3
 length_memory  <- 5
 journal_publication_bias <- 0
+file_drawer_effect <- 0
 vote_counter <- c(1, 0.95, 0.8, 0.5, 0.2, 0) #memory-probs
 memory_curve <- vote_counter
 
@@ -75,6 +76,13 @@ for(t in 1:ticks){ #for each tick
 
         #Update memory (drop oldest study, add newest result)
         memory_dat[i,] <- cbind(memory_dat[i,-1],researcher_dat[i,"result"])
+
+        #File drawer?
+        # Researchers always attempt to publish sign, non-sig are submitted to publication with probability equal to file_drawer_effect
+        researcher_dat[i,"published"] <- ifelse(researcher_dat[i,"result"] == 1,
+                                        1,
+                                        rbinom(1, 1, file_drawer_effect))
+
 
         #Try to publish
         # significant are always published, non-sig are published with probability equal to journal_publication bias
