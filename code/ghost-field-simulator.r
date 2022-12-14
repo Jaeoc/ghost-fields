@@ -37,7 +37,7 @@ effect_sizes <- c(hyp_1 = 0.05, #null effect size
 # *********************************************************
 
 researcher_dat <- data.frame(ID = 1:num_researchers,
-                             hypothesis = (1:num_researchers %% num_hyps) + 1,
+                             hypothesis = factor((1:num_researchers %% num_hyps) + 1), #factor so that we don't drop levels in "update_evidence"
                              result = 1,
                              continue = 1,
                              published = 1)
@@ -63,11 +63,11 @@ store[,1] <- researcher_dat[, "hypothesis"]
 # *********************************************************
 # Running the system
 # *********************************************************
-
+options(warn=2)
 # to go
 for(t in 1:ticks){ #for each tick
 
-    for (i in 1:n) { #for each researcher
+    for (i in 1:num_researchers) { #for each researcher
 
         #Run a study
         hyp <- researcher_dat[i,"hypothesis"]
@@ -81,14 +81,14 @@ for(t in 1:ticks){ #for each tick
         # Researchers always attempt to publish sign, non-sig are submitted to publication with probability equal to file_drawer_effect
         researcher_dat[i,"published"] <- ifelse(researcher_dat[i,"result"] == 1,
                                         1,
-                                        rbinom(1, 1, file_drawer_effect))
-
+                                        rbinom(1, 1, 1 - file_drawer_effect))
+        # note that prob  is 1 - file_drawer_effect
 
         #Try to publish
         # significant are always published, non-sig are published with probability equal to journal_publication bias
         researcher_dat[i,"published"] <- ifelse(researcher_dat[i,"result"] == 1,
                                         1,
-                                        rbinom(1, 1, journal_publication_bias))
+                                        rbinom(1, 1, 1 - journal_publication_bias))
 
         #study same topic?
         n_non_sig <- length_memory - sum(memory_dat[i,])
@@ -114,48 +114,60 @@ for(t in 1:ticks){ #for each tick
     #base version
     new_sig <- aggregate(researcher_dat$result,
                     list(researcher_dat$hypothesis),
-                    FUN = sum)
+                    FUN = sum,
+                    drop = FALSE) #'group.1" = hypotheses, x = sum results
+    new_sig[is.na(new_sig)] <- 0 #drop = FALSE gives NAs
     number_published_studies <- aggregate(researcher_dat$published,
                     list(researcher_dat$hypothesis),
-                    FUN = sum)
-    new_non_sig <- number_published_studies - new_sig
+                    FUN = sum,
+                    drop = FALSE) #keeps a hyp even if no researchers for it
+    number_published_studies[is.na(number_published_studies)] <- 0 #drop = FALSE gives NAs
+
+    new_non_sig <- number_published_studies #same formatting for consistency
+    new_non_sig$x <-number_published_studies$x - new_sig$x
 
     # #data.table version
     # researcher_dat <- as.data.table(researcher_dat)
     # researcher_dat[, .(num_sig = sum(result)), by = hypothesis]
 
-    topic_dat$positive <- topic_dat$positive + new_evidence$x
+    topic_dat$positive <- topic_dat$positive + new_sig$x
+
     topic_dat$negative <- topic_dat$negative + new_non_sig$x
     topic_dat$prop <- ifelse(topic_dat$positive + topic_dat$negative == 0, #can be zero if everyone who runs a study is affected by publication bias
                              0,
                              topic_dat$positive / (topic_dat$positive + topic_dat$negative))
 
     #Update topic for researchers with continue = 0
-    if(t > 0){ #first tick, no studies have been run, so total is zero and can't divide
+
     #First get probabilities for each new topic
     topic_selection_probs <- vector("list", length = num_hyps)
     for (h in 1:num_hyps){
-        total <- sum(topic_dat[-h,"ES"])
-        normalized_probs <- topic_dat[-h,"ES"] / total
+        total <- sum(topic_dat[-h,"prop"])
+        normalized_probs <- topic_dat[-h,"prop"] / total
         names(normalized_probs) <- topic_dat[-h, "hyp"]
         topic_selection_probs[[h]] <- normalized_probs
     }
-    }
+
 
     #next update topic for researcher with continue = 0
     for(i in 1:num_researchers){
-        if(researcher_dat[i, "continue"] == 1){next} #do nothing if researcher has continue = 1
+        if(researcher_dat[i, "continue"] == 1) {
+            next
+            } #do nothing if researcher has continue = 1
+         #if continue = 0
 
         hyp <- researcher_dat[i, "hypothesis"]
         new_p <- topic_selection_probs[[hyp]]
         new_h <- sample(names(new_p), 1, prob = new_p)
-        researcher_dat[i, "hypothesis"] <- new_h
+        researcher_dat[i, "hypothesis"] <- as.numeric(new_h)
 
         #reset memory for researchers with new topic to zero negative results
         memory_dat[i,] <- 1
+
     }
 
 store[,t+1] <- researcher_dat[, "hypothesis"] #t+1 because first column is starting values
 
 #tick
+print(t)
 }

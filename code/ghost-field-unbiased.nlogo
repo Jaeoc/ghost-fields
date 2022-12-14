@@ -426,7 +426,7 @@ power
 power
 0
 1
-1.0
+0.3
 0.05
 1
 NIL
@@ -488,7 +488,7 @@ journal-publication-bias
 journal-publication-bias
 0
 1
-0.0
+0.9
 0.1
 1
 NIL
