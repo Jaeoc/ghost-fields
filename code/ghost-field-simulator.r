@@ -13,12 +13,12 @@
 #3) dataframe with topic characteristics
 # topic_ID, ES, positive, negative, prop
 
-
+source("./code/functions.r")
 # *********************************************************
 #Setup: parameter values
 # *********************************************************
-
-ticks <- 200 #number of ticks
+replications <- 50
+ticks <- 50 #number of ticks
 num_researchers <- 100 #number of researchers
 num_hyps <- 3
 length_memory  <- 5
@@ -60,10 +60,18 @@ store <- matrix(nrow = num_researchers, ncol = ticks + 1)
 #+1 column because first column is starting values
 store[,1] <- researcher_dat[, "hypothesis"]
 
+empty <-matrix(0:50, nrow = (1+ticks), ncol = 1+ num_hyps)
+colnames(empty) <- c("run", paste0("hyp", seq_len(num_hyps)))
+store_summary <- vector("list",
+                    length = replications)
+store_summary <- lapply(store_summary, function(x) x  <- empty)
 # *********************************************************
 # Running the system
 # *********************************************************
 options(warn=2)
+
+for(reps in 1:replications){
+
 # to go
 for(t in 1:ticks){ #for each tick
 
@@ -111,63 +119,51 @@ for(t in 1:ticks){ #for each tick
     } #end of new data collection and decisions
 
     #Update evidence for each topic
-    #base version
-    new_sig <- aggregate(researcher_dat$result,
-                    list(researcher_dat$hypothesis),
-                    FUN = sum,
-                    drop = FALSE) #'group.1" = hypotheses, x = sum results
-    new_sig[is.na(new_sig)] <- 0 #drop = FALSE gives NAs
-    number_published_studies <- aggregate(researcher_dat$published,
-                    list(researcher_dat$hypothesis),
-                    FUN = sum,
-                    drop = FALSE) #keeps a hyp even if no researchers for it
-    number_published_studies[is.na(number_published_studies)] <- 0 #drop = FALSE gives NAs
 
-    new_non_sig <- number_published_studies #same formatting for consistency
-    new_non_sig$x <-number_published_studies$x - new_sig$x
-
-    # #data.table version
-    # researcher_dat <- as.data.table(researcher_dat)
-    # researcher_dat[, .(num_sig = sum(result)), by = hypothesis]
-
-    topic_dat$positive <- topic_dat$positive + new_sig$x
-
-    topic_dat$negative <- topic_dat$negative + new_non_sig$x
-    topic_dat$prop <- ifelse(topic_dat$positive + topic_dat$negative == 0, #can be zero if everyone who runs a study is affected by publication bias
-                             0,
-                             topic_dat$positive / (topic_dat$positive + topic_dat$negative))
+    new_evidence <- collect_evidence(researcher_dat)
+    topic_dat <- update_evidence(topic_dat, new_evidence)
 
     #Update topic for researchers with continue = 0
+    topic_selection_probs <- compute_normalized_probs(topic_dat, num_hyps)
 
-    #First get probabilities for each new topic
-    topic_selection_probs <- vector("list", length = num_hyps)
-    for (h in 1:num_hyps){
-        total <- sum(topic_dat[-h,"prop"])
-        normalized_probs <- topic_dat[-h,"prop"] / total
-        names(normalized_probs) <- topic_dat[-h, "hyp"]
-        topic_selection_probs[[h]] <- normalized_probs
-    }
-
-
-    #next update topic for researcher with continue = 0
     for(i in 1:num_researchers){
         if(researcher_dat[i, "continue"] == 1) {
             next
             } #do nothing if researcher has continue = 1
-         #if continue = 0
+         #else if continue = 0 update hyp
 
-        hyp <- researcher_dat[i, "hypothesis"]
-        new_p <- topic_selection_probs[[hyp]]
-        new_h <- sample(names(new_p), 1, prob = new_p)
-        researcher_dat[i, "hypothesis"] <- as.numeric(new_h)
+        researcher_dat[i, "hypothesis"] <- update_hyp(i,
+                                              researcher_dat,
+                                              topic_selection_probs)
 
-        #reset memory for researchers with new topic to zero negative results
+        #reset memory for these researchers to zero negative results
         memory_dat[i,] <- 1
 
     }
 
 store[,t+1] <- researcher_dat[, "hypothesis"] #t+1 because first column is starting values
 
+#this below is probably more efficient to have in the outer loop,, but can't figure out how to do it..
+if(num_hyps != 3) {stop("store_summary is hardcoded for 3 hyps!")}
+summary_res <- as.data.frame(table(store[,t+1]))
+hyp1_res <- summary_res[summary_res$Var1 == 1, "Freq"]
+hyp2_res <- summary_res[summary_res$Var1 == 2, "Freq"]
+hyp3_res <- summary_res[summary_res$Var1 == 3, "Freq"]
+
+store_summary[[reps]][t+1, "hyp1"] <-ifelse(length(hyp1_res) == 0, 0, hyp1_res)
+store_summary[[reps]][t+1, "hyp2"] <-ifelse(length(hyp2_res) == 0, 0, hyp2_res)
+store_summary[[reps]][t+1, "hyp3"] <-ifelse(length(hyp3_res) == 0, 0, hyp3_res)
+
 #tick
-print(t)
+cat(paste0(t, "\n"))
 }
+cat(paste0("# run", reps+1, "\n"))
+}
+
+#Surprisingly annoying... Below is not complete
+one <- apply(store, 2, function(hyp) as.data.frame(table(hyp)))
+two <- dplyr::bind_rows(one, .id = "tick")
+two$tick  <- two$tick -1
+
+#
+write.csv(store_summary, "data/test_data_r_code.csv")
