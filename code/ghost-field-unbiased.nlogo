@@ -9,6 +9,7 @@ researchers-own [
   memory ;nb! Positive result = 1, negative = 0. Start studying a topic with zero negative results (i.e., all 1s)
   continue
   published ;indicator of if the last study result was successfully published
+  bias
 ]
 topics-own [
   ID
@@ -31,6 +32,9 @@ to setup
     set hypothesis item (who mod num-hyps) range num-hyps ;assign equally, see https://stackoverflow.com/questions/50541934/netlogo-assign-turtles-randomly-but-equally-to-different-groups
     set memory n-values length-memory [1] ;start with zero negatives.
     set continue 1 ;by default continue on the same topic
+    if (random-float 1 < proportion-biased-researchers) [ ;on average we have then proportion-biased researchers
+      set bias 1
+    ]
   ]
 
   create-topics num-hyps
@@ -51,6 +55,10 @@ to setup
 
     set evidence n-values 3 [0] ;1st is positive, 2nd negative, 3rd proportion
 
+  ]
+
+  if (p-hacking-type = "Anton")[
+    set p-hacking-sucess 0.3
   ]
 
   reset-ticks
@@ -86,6 +94,14 @@ to go
     [set published 1]
     [set published 0]
 
+
+    ; Does the researcher p-hack?
+    if (result = 0 and bias = 1) [ ;these researchers do
+      if random-float 1 < p-hacking-success [ ;only equal to 0.3 so far
+        set result 1
+      ]
+    ]
+
     ;Does the researcher successfully publish their study given journal-level publication bias?
     if (published = 1) [ ;Only if the researcher tries to publish their study (i.e., did not put in file-drawer already)
 
@@ -99,6 +115,8 @@ to go
       [set published 1]
       [set published 0]
     ]
+
+
 
     ;study same topic? Probabilities based on memory with yes/no in the end
     if (memory-curve = "vote-counter")[
@@ -508,6 +526,31 @@ researcher-publication-bias
 1
 NIL
 HORIZONTAL
+
+SLIDER
+475
+170
+697
+203
+proportion-biased-researchers
+proportion-biased-researchers
+0
+1
+0.0
+0.05
+1
+NIL
+HORIZONTAL
+
+CHOOSER
+445
+235
+583
+280
+p-hacking-type
+p-hacking-type
+"Anton"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?
