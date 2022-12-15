@@ -57,9 +57,6 @@ to setup
 
   ]
 
-  if (p-hacking-type = "Anton")[
-    set p-hacking-sucess 0.3
-  ]
 
   reset-ticks
 end
@@ -80,10 +77,6 @@ to go
     [ set result 1 ] ;not negative
     [ set result 0 ] ;negative
 
-    ;set first memory value to result, push the remainder forward and drop last
-    set memory sentence result memory ;cbind
-    set memory remove-item 5 memory ;drop the last item, netlogo counts from 0
-
     ;Does the researcher themselves decide to publish, or put their result in the file drawer?
     let file-drawer-effect 0 ;for significant results, no file-drawer effect
     if (result = 0) [ ;for non-sig
@@ -101,6 +94,10 @@ to go
         set result 1
       ]
     ]
+
+    ;set first memory value to result, push the remainder forward and drop last
+    set memory sentence result memory ;cbind
+    set memory remove-item 5 memory ;drop the last item, netlogo counts from 0
 
     ;Does the researcher successfully publish their study given journal-level publication bias?
     if (published = 1) [ ;Only if the researcher tries to publish their study (i.e., did not put in file-drawer already)
@@ -375,14 +372,15 @@ NIL
 0.0
 1.0
 0.0
-0.5
+1.0
 true
 true
 "" ""
 PENS
 "pen-0" 1.0 0 -7500403 true "" "ask topics [\n\n create-temporary-plot-pen (word who)\n set-plot-pen-color ID * 10 + 5\n plotxy ticks (item 2 evidence)\n]"
-"pen-1" 1.0 0 -16777216 true "" "plotxy ticks 0.05"
-"pen-2" 1.0 0 -16777216 true "" "plotxy ticks power"
+"prop = 0.05" 1.0 0 -16777216 true "" "plotxy ticks 0.05"
+"prop = power" 1.0 0 -16777216 true "" "plotxy ticks power"
+"prop = power2" 1.0 0 -16777216 true "" "plotxy ticks power2"
 
 PLOT
 15
@@ -470,7 +468,7 @@ power2
 power2
 0
 1
-0.8
+0.5
 0.05
 1
 NIL
@@ -506,7 +504,7 @@ journal-publication-bias
 journal-publication-bias
 0
 1
-0.9
+0.0
 0.1
 1
 NIL
@@ -528,29 +526,34 @@ NIL
 HORIZONTAL
 
 SLIDER
-475
-170
-697
-203
+400
+230
+622
+263
 proportion-biased-researchers
 proportion-biased-researchers
 0
 1
-0.0
+0.5
 0.05
 1
 NIL
 HORIZONTAL
 
-CHOOSER
+SLIDER
 445
-235
-583
-280
-p-hacking-type
-p-hacking-type
-"Anton"
+150
+617
+183
+p-hacking-success
+p-hacking-success
 0
+1
+0.1
+0.05
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1181,6 +1184,120 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="num-hyps">
       <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-memory">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="non-null-effects">
+      <value value="2"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="p-hacking-0.3-0.5-power-var-prop-biased-researchers" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>count researchers with [hypothesis = 0]</metric>
+    <metric>count researchers with [hypothesis = 1]</metric>
+    <metric>count researchers with [hypothesis = 2]</metric>
+    <enumeratedValueSet variable="researcher-publication-bias">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="journal-publication-bias">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="power">
+      <value value="0.3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-researchers">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="memory-curve">
+      <value value="&quot;vote-counter&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="troubleshoot-memory-probs?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stop-if-zero?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-biased-researchers">
+      <value value="0"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.3"/>
+      <value value="0.4"/>
+      <value value="0.5"/>
+      <value value="0.6"/>
+      <value value="0.7"/>
+      <value value="0.8"/>
+      <value value="0.9"/>
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="power2">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-hyps">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-hacking-success">
+      <value value="0.3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-memory">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="non-null-effects">
+      <value value="2"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="p-hacking-0.3-0.5-power-all-biased" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>count researchers with [hypothesis = 0]</metric>
+    <metric>count researchers with [hypothesis = 1]</metric>
+    <metric>count researchers with [hypothesis = 2]</metric>
+    <enumeratedValueSet variable="researcher-publication-bias">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="journal-publication-bias">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="power">
+      <value value="0.3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-researchers">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="memory-curve">
+      <value value="&quot;vote-counter&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="troubleshoot-memory-probs?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="stop-if-zero?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-biased-researchers">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="power2">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-hyps">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="p-hacking-success">
+      <value value="0"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.3"/>
+      <value value="0.4"/>
+      <value value="0.5"/>
+      <value value="0.6"/>
+      <value value="0.7"/>
+      <value value="0.8"/>
+      <value value="0.9"/>
+      <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="length-memory">
       <value value="5"/>
